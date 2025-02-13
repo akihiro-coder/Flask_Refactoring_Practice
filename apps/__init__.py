@@ -5,7 +5,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from apps.config import Config
+from config import Config
 
 
 app = Flask(__name__, template_folder='templates', static_folder='static')

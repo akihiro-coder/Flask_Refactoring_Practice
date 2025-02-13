@@ -10,15 +10,12 @@ from apps.models import User
 @app.route('/register', methods=['POST'])
 def register():
     form = RegisterForm(request.form)
-
     if form.validate_on_submit():
         username = form.username.data
-        password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({'message': 'User registered successfully'})
+        password = form.password.data
+        if not User.check_duplicate():
+            User.register(username, password)
+            return jsonify({'message': 'User registered successfully'})
 
     return jsonify({'error': 'Invalid input'}), 400
 
@@ -26,15 +23,13 @@ def register():
 # ログインAPI
 @app.route('/login', methods=['POST'])
 def login():
-    form = LoginForm(request.form)
-
+    form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            login_user(user)
-            return jsonify({'message': 'Login successful'})
+        username = form.username.data
+        password = form.password.data
+        User.login(username, password)
 
-    return jsonify({'error': 'Invalid credentials'}), 400
+    return jsonify({'error': 'Invalid username or password.'}), 400
 
 
 # ログアウトAPI
@@ -48,7 +43,7 @@ def logout():
 # ユーザー一覧API
 @app.route('/users', methods=['GET'])
 def get_users():
-    users = User.query.all()
+    users = db.paginate(User.query.all(), per_page=10)
     return jsonify([{'username': user.username} for user in users])
 
 
