@@ -13,7 +13,7 @@ def register():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        if not User.check_duplicate():
+        if not User.is_duplicate(username):
             User.register(username, password)
             return jsonify({'message': 'User registered successfully'})
 

@@ -1,3 +1,5 @@
+from xmlrpc.client import INTERNAL_ERROR
+
 from flask import jsonify
 from flask_login import UserMixin, login_manager, login_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -22,10 +24,14 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def register(username, password):
-        new_user = User(username=username)
-        new_user.hash_password(password)
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            new_user = User(username=username)
+            new_user.hash_password(password)
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception as ex:
+            return jsonify({'error': 'Internal error occurred.'}), 500
+
 
     @staticmethod
     def is_duplicate(username):
@@ -37,10 +43,13 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def login(username, password):
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return jsonify({'message': 'Login successfully.'})
+        try:
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                return jsonify({'message': 'Login successfully.'})
+        except Exception as ex:
+            return jsonify({'error': 'Internal error occurred.'}), 500
 
 
 
